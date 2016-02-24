@@ -15,8 +15,6 @@ namespace Server29._10
     {
         static void Main(string[] args)
         {
-            if(args.Length > 0)
-                Console.WriteLine("map: " + args[0]);
             Server server = new Server();
             Console.WriteLine("Для работы с сервером доступны команды:");
             Console.WriteLine("Start - запуск сервера");

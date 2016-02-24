@@ -141,8 +141,8 @@ namespace Server29._10
                 }
                
             }
-            Console.WriteLine(data);
-            Console.WriteLine(DateTime.Now);
+            //Console.WriteLine(data);
+            //Console.WriteLine(DateTime.Now);
             return true;
         }
         public void Disconnect()

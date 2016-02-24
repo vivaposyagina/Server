@@ -17,19 +17,26 @@ namespace Server29._10
         List<string> players;
         List<PlayerList.Player> playersAndColors;
         List<VisiblePlayers.Player> playersAndCoords;
-        //List<List<VisibleObjects.MapObject>> mapObjects;
-        Random rand;
+        List<VisibleObjects.MapObject> mapObjects;
+        private Random rand;
+        private int[,] labyrinth;
+        private int sizeH, sizeW;        
+        System.IO.StreamReader read;
+        List<string> namesOfFileLabyrinths;
         public GameData()
         {
+            namesOfFileLabyrinths = new List<string>();
+            namesOfFileLabyrinths.Add("labyrinth1.txt");
             phaseOfGame = phase.waiting;
             players = new List<string>();
             playersAndColors = new List<PlayerList.Player>();
             playersAndCoords = new List<VisiblePlayers.Player>();
-            //mapObjects = new List<List<VisibleObjects.MapObject>>();
-            rand = new Random();
+            mapObjects = new List<VisibleObjects.MapObject>();
+            rand = new Random();            
             timeOfEndingPhaseWaiting = DateTime.Now.AddSeconds(30);
             timeOfEndingPhaseGame = DateTime.Now.AddSeconds(50);
-            timeOfEndingPhaseResult = DateTime.Now.AddSeconds(60);  
+            timeOfEndingPhaseResult = DateTime.Now.AddSeconds(60);
+            ReadLabyrinth("labyrinth1.txt");            
         }
         public void PlayerMoved(direction movement, string name)
         {
@@ -40,20 +47,21 @@ namespace Server29._10
                 {
                     index = i;
                 }
-            }
-            if (movement == direction.E)
+            }            
+            //Надо ли отправлять клиенту сообщение о том, что движение невозможно??
+            if (movement == direction.E && labyrinth[playersAndCoords[index].Row, playersAndCoords[index].Col + 1] != 1)
             {
                 playersAndCoords[index].Col += 1;
             }
-            if (movement == direction.W)
+            if (movement == direction.W && labyrinth[playersAndCoords[index].Row, playersAndCoords[index].Col - 1] != 1)
             {
                 playersAndCoords[index].Col -= 1;
             }
-            if (movement == direction.S)
+            if (movement == direction.N && labyrinth[playersAndCoords[index].Row - 1, playersAndCoords[index].Col] != 1)
             {
                 playersAndCoords[index].Row -= 1;
             }
-            if (movement == direction.N)
+            if (movement == direction.S && labyrinth[playersAndCoords[index].Row + 1, playersAndCoords[index].Col] != 1)
             {
                 playersAndCoords[index].Row += 1;
             }
@@ -99,9 +107,32 @@ namespace Server29._10
             }
             return null;
         }
-        public MapSize FormCommandOfMapSize()
+        public void ReadLabyrinth(string newString)
         {
-            return new MapSize(100, 100);
+            read = new System.IO.StreamReader(namesOfFileLabyrinths[0]);
+            sizeH = Convert.ToInt32(read.ReadLine());
+            sizeW = Convert.ToInt32(read.ReadLine());
+            labyrinth = new int[sizeH, sizeW];
+            for (int i = 0; i < sizeH; i++)
+            {
+                newString = read.ReadLine();
+                for(int j = 0; j < sizeW; j++)
+                {
+                    labyrinth[i, j] = Convert.ToInt32(newString[j]);
+                    if (labyrinth[i, j] == 1)
+                    {
+                        mapObjects.Add(new VisibleObjects.MapObject(types.WALL, i, j));
+                    } 
+                }
+            }            
+        }
+        public Tuple<int, int> GetSizeMaps()
+        {
+            return new Tuple<int, int>(sizeH, sizeW);
+        }
+        public MapSize FormCommandOfMapSize()
+        {            
+            return new MapSize(GetSizeMaps().Item1, GetSizeMaps().Item2);
         }
         public VisiblePlayers FormCommandOfVisiblePlayers(string name)
         {
@@ -112,23 +143,41 @@ namespace Server29._10
                 {
                     for (int j = 0; j < playersAndCoords.Count; j++)
                     {
-                        if ((playersAndCoords[i].Col + 5 < playersAndCoords[j].Col) && 
+                        if ((playersAndCoords[i].Col + 5 > playersAndCoords[j].Col) && 
                             (playersAndCoords[i].Col - 5 < playersAndCoords[j].Col) && 
-                            (playersAndCoords[i].Row + 5 < playersAndCoords[j].Row) &&
+                            (playersAndCoords[i].Row + 5 > playersAndCoords[j].Row) &&
                             (playersAndCoords[i].Row - 5 < playersAndCoords[j].Row) && 
                             (i != j))
                         {
                             list.Add(playersAndCoords[j]);
                         }                        
                     }
-                    return new VisiblePlayers(playersAndCoords);                    
+                    return new VisiblePlayers(list);                    
                 }
             }
             return null;      
         }
-        public VisibleObjects FormCommandOfVisibleObjects(int index)
+        public VisibleObjects FormCommandOfVisibleObjects(string name)
         {
-            return new VisibleObjects();
+            List<VisibleObjects.MapObject> list = new List<VisibleObjects.MapObject>();
+            for (int i = 0; i < playersAndColors.Count; i++)
+            {
+                if (name == playersAndColors[i].Name)
+                {
+                    for (int j = 0; j < mapObjects.Count; j++)
+                    {
+                        if ((mapObjects[j].Col < (playersAndCoords[i].Col + 5)) &&
+                            (mapObjects[j].Col > (playersAndCoords[i].Col - 5)) &&
+                            (mapObjects[j].Row < (playersAndCoords[i].Row + 5)) &&
+                            (mapObjects[j].Row > (playersAndCoords[i].Row - 5)))
+                        {
+                            list.Add(mapObjects[j]);
+                        }
+                    }
+                    return new VisibleObjects(list);
+                }
+            }
+            return null;   
         }
         public GameOver FormCommandOfGameOver()
         {
@@ -153,7 +202,8 @@ namespace Server29._10
         {
             players.Add(name);
             playersAndColors.Add(new PlayerList.Player(name, Color.FromArgb(rand.Next(0, 255), rand.Next(0, 255), rand.Next(0, 255))));
-            playersAndCoords.Add(new VisiblePlayers.Player(name, rand.Next(0, 100), rand.Next(0, 100)));
+            playersAndCoords.Add(new VisiblePlayers.Player(name, rand.Next(0, 5), rand.Next(0, 5)));
+            //playersAndCoords.Add(new VisiblePlayers.Player(name, rand.Next(0, GetSizeMaps().Item1), rand.Next(0, GetSizeMaps().Item2)));
         }
         public void DeletePlayer(string name)
         {

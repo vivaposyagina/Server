@@ -34,3 +34,9 @@ F:\Server29.10\Server29.10\obj\Debug\Server29.10.pdb
 G:\Server29.10\Server29.10\bin\Debug\Server29.10.exe.config
 G:\Server29.10\Server29.10\obj\Debug\Server29.10.exe
 G:\Server29.10\Server29.10\obj\Debug\Server29.10.pdb
+V:\Сервер\Server29.10\bin\Debug\Server29.10.exe.config
+V:\Сервер\Server29.10\obj\Debug\Server29.10.exe
+V:\Сервер\Server29.10\obj\Debug\Server29.10.pdb
+V:\Сервер\Server29.10\bin\Debug\Server29.10.exe
+V:\Сервер\Server29.10\bin\Debug\Server29.10.pdb
+V:\Сервер\Server29.10\obj\Debug\Server29.10.csprojResolveAssemblyReference.cache

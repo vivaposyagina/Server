@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Server29._10
-{
-    
+{    
+    public enum types { WALL };
+
     [XmlRootAttribute("visible_objects")]
     public class VisibleObjects : BaseCommand
     {
-        public enum types { WALL };
         public class MapObject
         {
             private int row;

@@ -66,9 +66,7 @@ namespace Server29._10
                         {
                             if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
                             {
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);
-                                //Костыль. Почему так????????
-                                Thread.Sleep(100);
+                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);                                
                             }
                         }
                         
@@ -77,9 +75,13 @@ namespace Server29._10
                     break;
                 case 4:
                     Chat messageCommand = bcmd as Chat;
-                    Chat messageFromServer;
-                    messageFromServer = new Chat(messageCommand.Text.ToUpper());
-                    client.SendNewCommand(messageFromServer as BaseCommand);
+                    for (int i = 1; i < ClientCommand.nextID; i++)
+                    {
+                        if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
+                        {
+                            clients[i].SendNewCommand(messageCommand as BaseCommand);
+                        }
+                    } 
                     break;
                 case 10:
                     PlayerMove movement = bcmd as PlayerMove;
@@ -98,11 +100,11 @@ namespace Server29._10
                             if (client == clients[i])
                             {
                                 client.SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                client.SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(i - 1) as BaseCommand);
+                                client.SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(listOfPlayersAndTheirNickname[i]) as BaseCommand);
                             }
                             clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);
                        }
-                        Thread.Sleep(100);
+                       
                     }
                     break;
                 case 12:
@@ -124,8 +126,7 @@ namespace Server29._10
                     {
                         if (clients.ContainsKey(q))
                         {
-                            clients[q].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);
-                            Thread.Sleep(100);
+                            clients[q].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);                          
                         }
                     }                      
                     break;
@@ -186,10 +187,9 @@ namespace Server29._10
                                 if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
                                 {
                                     clients[i].SendNewCommand(dataOfThisGame.FormCommandOfMapSize() as BaseCommand);
-                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);                                    
-                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(i - 1) as BaseCommand);
-                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                    Thread.Sleep(70);
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(listOfPlayersAndTheirNickname[i]) as BaseCommand);
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);                                    
                                 }
                             }
                             WhetherDataIsSentToStartGame = false;
