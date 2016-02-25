@@ -26,8 +26,7 @@ namespace Server29._10
         public GameData()
         {
             namesOfFileLabyrinths = new List<string>();
-            namesOfFileLabyrinths.Add("labyrinth1.txt");
-            phaseOfGame = phase.waiting;
+            namesOfFileLabyrinths.Add("labyrinth1.txt");            
             players = new List<string>();
             playersAndColors = new List<PlayerList.Player>();
             playersAndCoords = new List<VisiblePlayers.Player>();
@@ -36,7 +35,9 @@ namespace Server29._10
             timeOfEndingPhaseWaiting = DateTime.Now.AddSeconds(30);
             timeOfEndingPhaseGame = DateTime.Now.AddSeconds(50);
             timeOfEndingPhaseResult = DateTime.Now.AddSeconds(60);
-            ReadLabyrinth("labyrinth1.txt");            
+            ReadLabyrinth("labyrinth1.txt");
+            phaseOfGame = phase.waiting;
+
         }
         public void PlayerMoved(direction movement, string name)
         {
@@ -49,21 +50,29 @@ namespace Server29._10
                 }
             }            
             //Надо ли отправлять клиенту сообщение о том, что движение невозможно??
-            if (movement == direction.E && labyrinth[playersAndCoords[index].Row, playersAndCoords[index].Col + 1] != 1)
+            if (movement == direction.S && labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row + 1] == 0)
             {
-                playersAndCoords[index].Col += 1;
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row] = 0;
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row + 1] = 2;
+                playersAndCoords[index].Row += 1;
             }
-            if (movement == direction.W && labyrinth[playersAndCoords[index].Row, playersAndCoords[index].Col - 1] != 1)
+            if (movement == direction.N && labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row - 1] == 0)
             {
-                playersAndCoords[index].Col -= 1;
-            }
-            if (movement == direction.N && labyrinth[playersAndCoords[index].Row - 1, playersAndCoords[index].Col] != 1)
-            {
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row] = 0;
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row - 1] = 2;
                 playersAndCoords[index].Row -= 1;
             }
-            if (movement == direction.S && labyrinth[playersAndCoords[index].Row + 1, playersAndCoords[index].Col] != 1)
+            if (movement == direction.W && labyrinth[playersAndCoords[index].Col - 1, playersAndCoords[index].Row] == 0)
             {
-                playersAndCoords[index].Row += 1;
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row] = 0;
+                labyrinth[playersAndCoords[index].Col - 1, playersAndCoords[index].Row] = 2;
+                playersAndCoords[index].Col -= 1;
+            }
+            if (movement == direction.E && labyrinth[playersAndCoords[index].Col + 1, playersAndCoords[index].Row] == 0)
+            {
+                labyrinth[playersAndCoords[index].Col, playersAndCoords[index].Row] = 0;
+                labyrinth[playersAndCoords[index].Col + 1, playersAndCoords[index].Row] = 2;
+                playersAndCoords[index].Col += 1;
             }
             
         }
@@ -102,7 +111,7 @@ namespace Server29._10
             {
                 if (name == playersAndColors[i].Name)
                 {
-                    return new PlayerCoords(playersAndCoords[i].Row, playersAndCoords[i].Col);
+                    return new PlayerCoords(playersAndCoords[i].Col, playersAndCoords[i].Row);
                 }
             }
             return null;
@@ -118,7 +127,7 @@ namespace Server29._10
                 newString = read.ReadLine();
                 for(int j = 0; j < sizeW; j++)
                 {
-                    labyrinth[i, j] = Convert.ToInt32(newString[j]);
+                    labyrinth[i, j] = Convert.ToInt32(newString[j]) - Convert.ToInt32('0');
                     if (labyrinth[i, j] == 1)
                     {
                         mapObjects.Add(new VisibleObjects.MapObject(types.WALL, i, j));
@@ -186,24 +195,33 @@ namespace Server29._10
 
         public void StartGame()
         {
-            phaseOfGame = phase.game;
+            phaseOfGame = phase.game;            
         }
         public void FinishGame()
         {
             phaseOfGame = phase.result;
-        }
-
-        public void CreateMap()
-        { 
-
-        }
+        }    
 
         public void AddNewPlayer(string name)
         {
             players.Add(name);
             playersAndColors.Add(new PlayerList.Player(name, Color.FromArgb(rand.Next(0, 255), rand.Next(0, 255), rand.Next(0, 255))));
-            playersAndCoords.Add(new VisiblePlayers.Player(name, rand.Next(0, 5), rand.Next(0, 5)));
-            //playersAndCoords.Add(new VisiblePlayers.Player(name, rand.Next(0, GetSizeMaps().Item1), rand.Next(0, GetSizeMaps().Item2)));
+            int coordRow = 0, coordCol = 0;
+            while (labyrinth[coordCol, coordRow] == 1)
+            {
+                coordCol = rand.Next(0, GetSizeMaps().Item1);
+                coordRow = rand.Next(0, GetSizeMaps().Item2);
+                for (int i = 0; i < playersAndCoords.Count; i++)
+                {
+                    if (playersAndCoords[i].Col == coordCol && playersAndCoords[i].Row == coordRow)
+                    {
+                        coordRow = 0;
+                        coordCol = 0;
+                    }
+                }
+            }
+            labyrinth[coordCol, coordRow] = 2;
+            playersAndCoords.Add(new VisiblePlayers.Player(name, coordCol, coordRow));            
         }
         public void DeletePlayer(string name)
         {

@@ -79,6 +79,7 @@ namespace Server29._10
             SendBuffer.Append((char)newXmlMessage.Length);
             SendBuffer.Append(newXmlMessage);
             counterOfSentCommand++;
+            Console.WriteLine("Уровень 2");
             return Send(SendBuffer.ToString());        
         }
     }

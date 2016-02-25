@@ -141,7 +141,7 @@ namespace Server29._10
                 }
                
             }
-            //Console.WriteLine(data);
+            Console.WriteLine("Уровень 3 " + DateTime.Now);
             //Console.WriteLine(DateTime.Now);
             return true;
         }
