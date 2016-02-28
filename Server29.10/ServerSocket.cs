@@ -40,8 +40,7 @@ namespace Server29._10
                 {
                     try
                     {
-                        TcpClient tcp = listener.AcceptTcpClient();
-                        tcp.NoDelay = true;                   
+                        TcpClient tcp = listener.AcceptTcpClient();                        
                         clients.Enqueue(tcp);                        
                         if (EventHandlerListForServer != null) EventHandlerListForServer();
                     }

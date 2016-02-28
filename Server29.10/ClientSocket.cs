@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,8 +16,7 @@ namespace Server29._10
         public delegate void ClientSocketActionEventHandlerForClientCommand();
         //public delegate void ClientSocketActionEventHandlerForServer(ClientCommand client);
         protected TcpClient tcp;
-        byte[] buffer;
-        NetworkStream stream;
+        byte[] buffer;        
         int length = 0;        
         protected status currentStatus = status.off;
         public status CurrentStatus
@@ -37,7 +36,6 @@ namespace Server29._10
         {
             tcp = client;            
             buffer = new byte[1000];
-            stream = tcp.GetStream();
             StartToWaitMessage();
         }
         public int Length
@@ -61,9 +59,10 @@ namespace Server29._10
         }
         void MessageReceiver()
         {
-            byte[] localBuffer = new byte[1000];
+            NetworkStream stream = tcp.GetStream();
             while (true)
             {
+                byte[] localBuffer = new byte[1000];
                 try
                 { 
                     int lenghtNewMessage = stream.Read(localBuffer, 0, 1000);
@@ -84,8 +83,7 @@ namespace Server29._10
                     }
                 }
                 catch (Exception)
-                {
-                    currentStatus = status.error;
+                {             
                     //throw new SocketException();
                 }
               
@@ -129,10 +127,11 @@ namespace Server29._10
             {
                 try
                 {
+                    NetworkStream stream = this.tcp.GetStream();
                     byte[] bytes = ConvertToArrayOfByte(data);
                      
                     stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush();
+                    return true;
                 }
                 catch (Exception)
                 {
@@ -141,8 +140,6 @@ namespace Server29._10
                 }
                
             }
-            Console.WriteLine("Уровень 3 " + DateTime.Now);
-            //Console.WriteLine(DateTime.Now);
             return true;
         }
         public void Disconnect()

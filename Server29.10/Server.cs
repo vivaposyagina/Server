@@ -66,7 +66,9 @@ namespace Server29._10
                         {
                             if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
                             {
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);                                
+                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);
+                                //Костыль. Почему так????????
+                                Thread.Sleep(100);
                             }
                         }
                         
@@ -75,13 +77,9 @@ namespace Server29._10
                     break;
                 case 4:
                     Chat messageCommand = bcmd as Chat;
-                    for (int i = 1; i < ClientCommand.nextID; i++)
-                    {
-                        if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
-                        {
-                            clients[i].SendNewCommand(messageCommand as BaseCommand);
-                        }
-                    } 
+                    Chat messageFromServer;
+                    messageFromServer = new Chat(messageCommand.Text.ToUpper());
+                    client.SendNewCommand(messageFromServer as BaseCommand);
                     break;
                 case 10:
                     PlayerMove movement = bcmd as PlayerMove;
@@ -100,11 +98,11 @@ namespace Server29._10
                             if (client == clients[i])
                             {
                                 client.SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                client.SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(listOfPlayersAndTheirNickname[i]) as BaseCommand);
+                                client.SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(i - 1) as BaseCommand);
                             }
                             clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);
                        }
-                       
+                        Thread.Sleep(100);
                     }
                     break;
                 case 12:
@@ -126,7 +124,8 @@ namespace Server29._10
                     {
                         if (clients.ContainsKey(q))
                         {
-                            clients[q].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);                          
+                            clients[q].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);
+                            Thread.Sleep(100);
                         }
                     }                      
                     break;
@@ -151,6 +150,7 @@ namespace Server29._10
                         if (clients.ContainsKey(j))
                         {
                             clients[j].SendNewCommand(dataOfThisGame.FormCommandOfPlayersList() as BaseCommand);
+                            Thread.Sleep(100);
                         }
                     }
                 }
@@ -160,56 +160,71 @@ namespace Server29._10
         {
             Thread workerThread = new Thread(delegate()
             {
-                bool WhetherDataIsSentToStartGame = false;
-                bool WhetherDataIsSentToFinishGame = false;
-                DateTime timeForSendingLeftTime = DateTime.Now.AddSeconds(10);
-                while (currentStatus == status.on)
+                bool WhetherDataIsSentToStartGame = true;
+                bool WhetherDataIsSentToFinishGame = true;
+                DateTime timeForSendingLeftTime = DateTime.Now.AddSeconds(10);  
+                while (currentStatus == status.on)               
                 {
-                    Thread.Sleep(30);
+                    Thread.Sleep(30);                                      
                     CheckClients();
-                    if (dataOfThisGame.phaseOfGame == phase.waiting || dataOfThisGame.phaseOfGame == phase.game)
+                    if (DateTime.Now < dataOfThisGame.TimeOfEndingThisWaiting)
                     {
                         if (DateTime.Compare(DateTime.Now, timeForSendingLeftTime) > 0)
                         {
                             SendTimeLeft();
                             timeForSendingLeftTime = timeForSendingLeftTime.AddSeconds(10);
-                        }
+                        }                        
                     }
-                    if (DateTime.Now < dataOfThisGame.TimeOfEndingPhaseGame && DateTime.Now > dataOfThisGame.TimeOfEndingThisWaiting && !WhetherDataIsSentToStartGame)
-                    {
-                        dataOfThisGame.StartGame();
-                        for (int i = 1; i <= ClientCommand.nextID; i++)
+                    if (DateTime.Now < dataOfThisGame.TimeOfEndingPhaseGame && DateTime.Now > dataOfThisGame.TimeOfEndingThisWaiting)
+                    {                   
+                        
+                        if (WhetherDataIsSentToStartGame)
                         {
-                            if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
+                            dataOfThisGame.StartGame();
+                            for (int i = 1; i <= ClientCommand.nextID; i++)
                             {
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfMapSize() as BaseCommand);
-                                Console.WriteLine(i + "  клиент получил сообщение1 " + DateTime.Now);
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                Console.WriteLine(i + "  клиент получил сообщение2 " + DateTime.Now);
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                Console.WriteLine(i + "  клиент получил сообщение3 " + DateTime.Now);
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);
-                                Console.WriteLine(i + "  клиент получил сообщение4 " + DateTime.Now);
+                                if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
+                                {
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfMapSize() as BaseCommand);
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfPlayerCoords(listOfPlayersAndTheirNickname[i]) as BaseCommand);                                    
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisibleObjects(i - 1) as BaseCommand);
+                                    clients[i].SendNewCommand(dataOfThisGame.FormCommandOfVisiblePlayers(listOfPlayersAndTheirNickname[i]) as BaseCommand);
+                                    Thread.Sleep(70);
+                                }
                             }
+                            WhetherDataIsSentToStartGame = false;
                         }
-                        WhetherDataIsSentToStartGame = true;
+                        
+                        if (DateTime.Compare(DateTime.Now, timeForSendingLeftTime) > 0)
+                        {
+                            SendTimeLeft();
+                            timeForSendingLeftTime = timeForSendingLeftTime.AddSeconds(10);
+                        }                        
                     }
-
-                    if (DateTime.Now > dataOfThisGame.TimeOfEndingPhaseGame && DateTime.Now < dataOfThisGame.TimeOfEndingPhaseResult && !WhetherDataIsSentToFinishGame)
+                    if (DateTime.Now > dataOfThisGame.TimeOfEndingPhaseGame && DateTime.Now < dataOfThisGame.TimeOfEndingPhaseResult)
                     {
-                        dataOfThisGame.FinishGame();
-                        for (int i = 1; i < ClientCommand.nextID; i++)
-                        {
-                            if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
+                       // if (DateTime.Compare(DateTime.Now, timeForSendingLeftTime) > 0)
+                        
+                            if (WhetherDataIsSentToFinishGame)
                             {
-                                clients[i].SendNewCommand(dataOfThisGame.FormCommandOfGameOver() as BaseCommand);
+                                dataOfThisGame.FinishGame();
+                                for (int i = 1; i <= ClientCommand.nextID; i++)
+                                {
+                                    if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
+                                    {
+                                        clients[i].SendNewCommand(dataOfThisGame.FormCommandOfGameOver() as BaseCommand);
+                                        Thread.Sleep(70);
+                                    }
+                                }
+                                WhetherDataIsSentToFinishGame = false;
                             }
-                        }
-                        WhetherDataIsSentToFinishGame = true;
+                            //SendTimeLeft();
+                            //timeForSendingLeftTime = timeForSendingLeftTime.AddSeconds(10);
+                        
                     }
                     if (DateTime.Now > dataOfThisGame.TimeOfEndingPhaseResult)
-                    {
-                        FinalizationWorkingServer();
+                    {                       
+                       // FinalizationWorkingServer();
                         //InitializationServer();
                     }
                 }
@@ -224,7 +239,7 @@ namespace Server29._10
                 if (clients.ContainsKey(i) && clients[i].CurrentStatus == status.on)
                 {
                     clients[i].SendNewCommand(tl);
-                    Console.WriteLine(i + " клиент уровень 1 - время");
+                    Thread.Sleep(100);
                 }               
             } 
         }
